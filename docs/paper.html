@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paper Details">
+    <title>Paper Details</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="main-content">
+        <section id="paper-detail">
+            <div class="paper-detail-container">
+                <a href="index.html" class="back-link">← Back to Research</a>
+                <div id="paper-content">
+                    <p>Loading paper information...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get paper index from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const paperIndex = parseInt(urlParams.get('index'));
+
+            if (isNaN(paperIndex) || paperIndex < 0) {
+                document.getElementById('paper-content').innerHTML = '<p>Error: No valid paper index specified.</p>';
+                return;
+            }
+
+            // Google Sheets URL - convert pubhtml to CSV format
+            const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2WZPl25mEBmlGvrpkX5dKWOuhizH5bHsoAIzNOwMusbFBH5Rn2_seS2uqUXWeD1g1VVylEiMC5QuQ/pub?output=csv';
+
+            // Fetch and process papers from Google Sheets
+            fetch(sheetUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch Google Sheets data');
+                    }
+                    return response.text();
+                })
+                .then(csvData => {
+                    const papers = parseCSV(csvData);
+                    console.log('Parsed papers:', papers);
+                    console.log('Looking for index:', paperIndex);
+                    
+                    const paper = papers[paperIndex];
+
+                    if (!paper) {
+                        console.error('Paper not found. Available indices: 0-' + (papers.length - 1));
+                        document.getElementById('paper-content').innerHTML = '<p>Error: Paper not found.</p>';
+                        return;
+                    }
+
+                    console.log('Found paper:', paper);
+
+                    // Handle case-insensitive column names
+                    const paperTitle = paper.Title || paper.title || paper.TITLE || '';
+                    const authors = paper.Authors || paper.authors || paper.AUTHORS || '';
+                    const conference = paper.Conference || paper.conference || paper.CONFERENCE || '';
+                    const year = paper.Year || paper.year || paper.YEAR || '';
+                    const abstract = paper.Abstract || paper.abstract || paper.ABSTRACT || '';
+                    const imageUrl = paper.Image || paper.image || paper.IMAGE || '';
+                    const paperLink = paper.Paper || paper.paper || paper.PAPER || '';
+
+                    if (!paperTitle || !authors) {
+                        console.error('Paper data incomplete:', paper);
+                        document.getElementById('paper-content').innerHTML = `
+                            <p>Error: Paper data incomplete.</p>
+                            <p>Title: ${paperTitle || 'MISSING'}</p>
+                            <p>Authors: ${authors || 'MISSING'}</p>
+                        `;
+                        return;
+                    }
+
+                    // Update page title
+                    document.title = paperTitle;
+                    const metaDesc = document.querySelector('meta[name="description"]');
+                    if (metaDesc) {
+                        metaDesc.content = paperTitle;
+                    }
+
+                    // Display paper information
+                    const paperContent = document.getElementById('paper-content');
+                    let html = `
+                        <h1 class="paper-title">${escapeHtml(paperTitle)}</h1>
+                        <p class="paper-authors">${escapeHtml(authors)}</p>
+                    `;
+                    
+                    // Display Conference and Year
+                    if (conference || year) {
+                        let venueInfo = '';
+                        if (conference) {
+                            venueInfo = escapeHtml(conference);
+                        }
+                        if (year) {
+                            if (venueInfo) {
+                                venueInfo += `, ${escapeHtml(year)}`;
+                            } else {
+                                venueInfo = escapeHtml(year);
+                            }
+                        }
+                        if (venueInfo) {
+                            html += `<p class="paper-venue">${venueInfo}</p>`;
+                        }
+                    }
+                    
+                    // Display Paper button if link is available
+                    if (paperLink) {
+                        html += `<a href="${escapeHtml(paperLink)}" target="_blank" rel="noopener noreferrer" class="paper-link-button">Paper</a>`;
+                    }
+                    
+                    // Optionally show abstract if available
+                    if (abstract) {
+                        html += `<div class="paper-abstract"><h2>Abstract</h2><p>${escapeHtml(abstract)}</p></div>`;
+                    }
+                    
+                    // Display image below abstract if available
+                    if (imageUrl) {
+                        html += `<div class="paper-image-container"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(paperTitle)}" class="paper-detail-image" onerror="this.style.display='none'"></div>`;
+                    }
+                    
+                    paperContent.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error fetching Google Sheets data:', error);
+                    document.getElementById('paper-content').innerHTML = '<p>Error loading paper information. Check console for details.</p>';
+                });
+        });
+
+        function parseCSV(csvData) {
+            const lines = csvData.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) return [];
+            
+            // Parse header row
+            const headers = parseCSVLine(lines[0]);
+            const papers = [];
+            
+            // Parse data rows
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                const paper = {};
+                
+                headers.forEach((header, index) => {
+                    const cleanHeader = header.trim();
+                    paper[cleanHeader] = values[index] ? values[index].trim() : '';
+                });
+                
+                // Count non-empty columns
+                const nonEmptyColumns = Object.values(paper).filter(value => value && value.trim() !== '').length;
+                
+                // Only add papers that have more than 3 non-empty columns
+                // This matches the filtering logic in script.js to ensure indices are consistent
+                if (nonEmptyColumns > 3) {
+                    papers.push(paper);
+                }
+            }
+            
+            return papers;
+        }
+
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        // Escaped quote
+                        current += '"';
+                        i++; // Skip next quote
+                    } else {
+                        // Toggle quote state
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // End of field
+                    values.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            // Add last field
+            values.push(current);
+            
+            return values;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Research - Empowering Minds, Driving Innovation">
+    <meta name="keywords" content="Research, PhD, Innovation">
+    <title>Research</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="main-content">
+        <section id="our-research">
+            <div class="filter-container" id="filter-container">
+                <div class="filter-row">
+                    <div class="filter-item">
+                        <label for="field-filter" class="filter-label">Field:</label>
+                        <div class="custom-dropdown">
+                            <button class="dropdown-button" id="field-dropdown-button" type="button">
+                                <span id="field-dropdown-text">All Fields</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div class="dropdown-content" id="field-dropdown-content">
+                                <!-- Options will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-item">
+                        <label for="year-filter" class="filter-label">Year:</label>
+                        <div class="custom-dropdown">
+                            <button class="dropdown-button" id="year-dropdown-button" type="button">
+                                <span id="year-dropdown-text">All Years</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div class="dropdown-content" id="year-dropdown-content">
+                                <!-- Options will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-item">
+                        <label for="author-filter" class="filter-label">First Author:</label>
+                        <div class="custom-dropdown">
+                            <button class="dropdown-button" id="author-dropdown-button" type="button">
+                                <span id="author-dropdown-text">All Authors</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div class="dropdown-content" id="author-dropdown-content">
+                                <!-- Options will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-info" id="filter-info"></div>
+            </div>
+            <div class="paper-list" id="paper-list">
+                <!-- Paper tiles will be dynamically inserted here -->
+            </div>
+            <div class="pagination-container" id="pagination-container">
+                <!-- Pagination controls will be dynamically inserted here -->
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
