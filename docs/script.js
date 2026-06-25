@@ -46,16 +46,78 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error fetching Google Sheets data:', error));
 });
 
+function closeAllDropdowns(except) {
+    document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
+        if (dropdown === except) return;
+        dropdown.classList.remove('active');
+        const content = dropdown.querySelector('.dropdown-content');
+        if (content) {
+            content.classList.remove('show');
+        }
+    });
+}
+
 function setupSortControl() {
-    const sortSelect = document.getElementById('sort-select');
-    if (!sortSelect) return;
-    sortSelect.value = currentSort;
-    sortSelect.addEventListener('change', function() {
-        currentSort = this.value;
-        // Reset to page 1 when sort order changes
-        currentPage = 1;
-        sessionStorage.removeItem('currentPage');
-        displayPapers(filteredPapers);
+    const dropdownContent = document.getElementById('sort-dropdown-content');
+    const dropdownButton = document.getElementById('sort-dropdown-button');
+    const dropdownText = document.getElementById('sort-dropdown-text');
+    if (!dropdownContent || !dropdownButton) return;
+
+    const customDropdown = dropdownButton.closest('.custom-dropdown');
+
+    const sortOptions = [
+        { value: 'year-desc', label: 'Year ↓' },
+        { value: 'year-asc', label: 'Year ↑' }
+    ];
+
+    // Build the options (single-select, mutually exclusive)
+    dropdownContent.innerHTML = '';
+    sortOptions.forEach(option => {
+        const optionElement = document.createElement('label');
+        optionElement.className = 'dropdown-option';
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = option.label;
+        optionElement.appendChild(labelSpan);
+        optionElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentSort = option.value;
+            dropdownText.textContent = option.label;
+            // Close the dropdown
+            dropdownContent.classList.remove('show');
+            customDropdown.classList.remove('active');
+            // Reset to page 1 when sort order changes
+            currentPage = 1;
+            sessionStorage.removeItem('currentPage');
+            displayPapers(filteredPapers);
+        });
+        dropdownContent.appendChild(optionElement);
+    });
+
+    // Set initial button text based on the default sort
+    const initial = sortOptions.find(o => o.value === currentSort);
+    if (initial) {
+        dropdownText.textContent = initial.label;
+    }
+
+    // Toggle dropdown on button click
+    dropdownButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Close any other open dropdowns first
+        closeAllDropdowns(customDropdown);
+        const isOpen = dropdownContent.classList.toggle('show');
+        if (isOpen) {
+            customDropdown.classList.add('active');
+        } else {
+            customDropdown.classList.remove('active');
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+            dropdownContent.classList.remove('show');
+            customDropdown.classList.remove('active');
+        }
     });
 }
 
@@ -201,6 +263,8 @@ function populateMultiSelectFilter(filterType, options, allText, contentId, butt
     const customDropdown = dropdownButton.closest('.custom-dropdown');
     dropdownButton.addEventListener('click', function(e) {
         e.stopPropagation();
+        // Close any other open dropdowns first
+        closeAllDropdowns(customDropdown);
         const isOpen = dropdownContent.classList.toggle('show');
         if (isOpen) {
             customDropdown.classList.add('active');

@@ -51,11 +51,16 @@
                         </div>
                     </div>
                     <div class="filter-item">
-                        <label for="sort-select" class="filter-label">Sort by:</label>
-                        <select id="sort-select" class="sort-select">
-                            <option value="year-desc">Year ↓</option>
-                            <option value="year-asc">Year ↑</option>
-                        </select>
+                        <label for="sort-filter" class="filter-label">Sort by:</label>
+                        <div class="custom-dropdown">
+                            <button class="dropdown-button" id="sort-dropdown-button" type="button">
+                                <span id="sort-dropdown-text">Year ↓</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div class="dropdown-content" id="sort-dropdown-content">
+                                <!-- Options will be dynamically inserted here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="filter-info" id="filter-info"></div>

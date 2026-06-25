@@ -208,30 +208,6 @@ header::before {
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.sort-select {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
-    font-size: 1em;
-    padding: 10px 15px;
-    border: 2px solid #452ee0;
-    border-radius: 5px;
-    background-color: #ffffff;
-    color: #000000;
-    cursor: pointer;
-    min-width: 200px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.sort-select:hover {
-    border-color: #2a1c8f;
-}
-
-.sort-select:focus {
-    outline: none;
-    border-color: #2a1c8f;
-    box-shadow: 0 0 5px rgba(69, 46, 224, 0.3);
-}
-
 .dropdown-button:hover {
     border-color: #2a1c8f;
 }
