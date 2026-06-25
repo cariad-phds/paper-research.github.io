@@ -3,6 +3,7 @@ let paperTiles = [];
 let currentPage = 1;
 const papersPerPage = 10;
 let filteredPapers = [];
+let currentSort = 'year-desc';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Google Sheets URL - convert pubhtml to CSV format
@@ -28,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
             populateFieldFilter(uniqueTags);
             populateYearFilter(uniqueYears);
             populateAuthorFilter(uniqueFirstAuthors);
+
+            // Wire up the sort control
+            setupSortControl();
             
             // Restore page from sessionStorage if available
             const savedPage = sessionStorage.getItem('currentPage');
@@ -41,6 +45,39 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => console.error('Error fetching Google Sheets data:', error));
 });
+
+function setupSortControl() {
+    const sortSelect = document.getElementById('sort-select');
+    if (!sortSelect) return;
+    sortSelect.value = currentSort;
+    sortSelect.addEventListener('change', function() {
+        currentSort = this.value;
+        // Reset to page 1 when sort order changes
+        currentPage = 1;
+        sessionStorage.removeItem('currentPage');
+        displayPapers(filteredPapers);
+    });
+}
+
+function sortPapers(papers) {
+    const getYear = paper => {
+        const year = parseInt(paper.Year || paper.year || paper.YEAR || '', 10);
+        return isNaN(year) ? null : year;
+    };
+
+    // Copy to avoid mutating the source array
+    return papers.slice().sort((a, b) => {
+        const yearA = getYear(a);
+        const yearB = getYear(b);
+
+        // Papers without a year always go to the end
+        if (yearA === null && yearB === null) return 0;
+        if (yearA === null) return 1;
+        if (yearB === null) return -1;
+
+        return currentSort === 'year-asc' ? yearA - yearB : yearB - yearA;
+    });
+}
 
 function extractUniqueTags(papers) {
     const tagsSet = new Set();
@@ -182,6 +219,9 @@ function populateMultiSelectFilter(filterType, options, allText, contentId, butt
 }
 
 function displayPapers(papers) {
+    // Apply the current sort order
+    papers = sortPapers(papers);
+
     // Update filtered papers
     filteredPapers = papers;
     
